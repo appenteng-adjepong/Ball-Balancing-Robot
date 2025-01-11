@@ -1,8 +1,6 @@
 #include "util.h"
 #include "newton_raphson.h"
 
-
-
 int initBallBalancingRobot(int fd)
 {
 
@@ -69,7 +67,7 @@ int inverseKinematics(const double *plate_angles, double *servo_angles)
 
   //loop through each robot arm and find the corresponding beta
   int i;
-  for (i = 0;i<3;i++){
+  for (i = 0; i < 3; i ++) {
     double La = P_z + offsets[i];
     double num = (La*La)+(L1*L1)-(L2*L2);
     double den = 2*La*L1;
@@ -81,7 +79,7 @@ int inverseKinematics(const double *plate_angles, double *servo_angles)
   }
 
   //calculate the servo angles alpha in degrees.
-  for(i = 0;i<3;i++){
+  for(i = 0 ;i < 3; i++) {
     *(servo_angles+i)= (0.5*M_PI-beta[i])*(180/M_PI);
   }
 

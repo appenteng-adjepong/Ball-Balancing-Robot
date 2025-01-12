@@ -7,6 +7,15 @@ int main()
   /////// Initialization ///////
   //////////////////////////////
 
+// Time information
+
+time_t rawtime;
+struct tm *info;
+char buffer[80];
+time (&rawtime);
+info = localtime(&rawtime);
+printf("Formatted date and time: | %s| \n", buffer);
+
   // Print Welcome Message
   printf("\e[1;1H\e[2J"); // Clear screen
   printf("#####################\n");
@@ -44,6 +53,9 @@ int main()
   printf("Select Task: ");
   scanf("%d", &task_selection);
 
+  int u_pixy, v_pixy, flag;
+  double Xw, Yw;
+
   //////////////////////////////
   /////////// Task 1 ///////////
   //////////////////////////////
@@ -63,7 +75,7 @@ int main()
     printf("\nEnter rotation angle about x(phi_x)= ");
     scanf("%lf", plate_angles);
     printf("\nEnter the rotation angle about y(tetha_y)= ");
-    scanf("%lf",plate_angles+1);
+    scanf("%lf",plate_angles + 1);
 
     int output = inverseKinematics(plate_angles, servo_angles);
     if(output==0){

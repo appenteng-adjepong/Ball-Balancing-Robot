@@ -254,3 +254,149 @@ int readFromPixy(int fd, int *flag, int *x, int *y)
 
   return 1;
 }
+
+long getMicroseconds(){
+  struct timeval the_time;
+  long microseconds;
+  gettimeofday(&the_time, NULL);
+  microseconds = the_time.tv_sec*1000000 + the_time.tv_usec/1000 + the_time.tv_usec;
+  return microseconds;
+}
+
+int pushBack(const double x_new, double *x_array, int array_size) {
+
+  for (int i = array_size - 1; i > 0; i --) {
+    x_array[i] = x_array[i - 1];
+  }
+
+  x_array[0] = x_new;
+  return 1;
+}
+
+int startLogging(FILE *fp, int task_selection, double k_p, double k_d,
+                 double k_i, int n_pos, int n_vel)
+{
+  fprintf(fp, "#Task Selector: %d\n", task_selection);
+  fprintf(fp, "#PID Parameters: kp: %.4f, kd: %.4f, ki: %.4f\n", k_p, k_d, k_i);
+  fprintf(fp, "#n_pos: %d\n", n_pos);
+  fprintf(fp, "#n_vel: %d\n", n_vel);
+  fprintf(fp,
+          "t x_ref y_ref vx_ref vy_ref x_raw y_raw x y vx_raw vy_raw vx vy\n");
+  fclose(fp);
+
+  return 0;
+}
+
+int logger(FILE *fp,
+           long end_time,
+           double current_time,
+           double dt,
+           double k_p,
+           double k_d,
+           double k_i,
+           double x_ref,
+           double y_ref,
+           double vx_ref,
+           double vy_ref,
+           double x_raw,
+           double y_raw,
+           double x,
+           double y,
+           double vx_raw,
+           double vy_raw,
+           double vx,
+           double vy,
+           double *plate_angles,
+           double *servo_angles,
+           double x_integrator,
+           double y_integrator)
+{
+
+  printf("\e[1;1H\e[2J");
+  printf("##################################\n");
+  printf("############# PID LOOP ###########\n");
+  printf("##################################\n");
+  printf("Timing\n");
+  printf("Elapsed Time: %.2f s\n", current_time);
+  printf("Step Time: %.4f s\n", dt);
+  printf("Frequency: %.1f Hz\n\n", 1 / dt);
+  printf("PID Parameters\n");
+  printf("k_p: %.4f, k_d: %.4f, k_i: %.4f\n\n", k_p, k_d, k_i);
+  printf("ReferencePosition\n");
+  printf("x_ref: %.f \t y_ref: %.f\n\n", x_ref, y_ref);
+  printf("Position\n");
+  printf("x: %.f \t y: %.f\n\n", x, y);
+  printf("Reference Velocity\n");
+  printf("vx_ref: %.f \t vy_ref: %.f\n\n", vx_ref, vy_ref);
+  printf("Velocity\n");
+  printf("vx: %.f \t vy: %.f\n\n", vx, vy);
+  printf("Plate Angles\n");
+  printf("pitch: %.f deg, roll: %.f deg \n\n", plate_angles[1], plate_angles[0]);
+  printf("Servo Angles\n");
+  printf("A: %.f deg, B: %.f deg, C: %.f deg\n\n", servo_angles[0], servo_angles[1], servo_angles[2]);
+  printf("Integrators\n");
+  printf("x_integ: %.2f, y_integ: %.2f\n", x_integrator, y_integrator);
+
+  fprintf(
+      fp,
+      "%lu %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",
+      end_time, x_ref, y_ref, vx_ref, vy_ref, x_raw, y_raw, x, y, vx_raw,
+      vy_raw, vx, vy);
+  fclose(fp);
+
+  return 0;
+};
+
+double discreteDerivative(const double dt, const double *x) {
+  // TO DO: Implement a discrete derivative function
+
+  return (x[0] - x[1])/dt;
+}
+
+int circularTrajectory(const double current_time, double *x_ref, double *y_ref, double *vx_ref, double *vy_ref) {
+
+  double traj_start = 3;
+  double num_of_traj = 5; 
+  double period = 4;
+  double R = 80;
+
+  // TO DO: Implement the circular trajectory function
+  // Hint: Use the equations for parametrizing a circle (and its derivative)
+
+  if (current_time < traj_start || current_time > num_of_traj*period) {
+    *x_ref = 0;
+    *y_ref = 0;
+    *vx_ref = 0;
+    *vy_ref = 0;
+  }
+  else {
+    double t = current_time - traj_start;
+    double omega = (2*M_PI)/period;
+    *x_ref = R*sin(omega*t);
+    *y_ref = R*cos(omega*t);
+    *vx_ref = R*omega*cos(omega*t);
+    *vy_ref = -R*omega*sin(omega*t);
+  }
+  return 0;
+}
+double movingAverage(const int n, const double *x) {
+  //TO DO: Implement a moving average function
+
+  double sum = 0;
+
+  for (int i = 0; i < n; i ++) {
+    sum += x[i];
+
+  }
+
+  return sum/n;
+}
+
+double butterWorth(const double *x, const double *y) {
+  // Butterworth filter coefficients are generated from a MATLAB script.
+  double a[3] = {1, -0.9824, 0.3477};
+  double b[3] = {0.0913, 0.1826, 0.0913};
+
+  return b[0]*x[0] + b[1]*x[1] + b[2]*x[2] -a[1]*y[0] -a[2]*y[1];
+}
+
